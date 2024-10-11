@@ -2,8 +2,6 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "financeapp:latest"
-        DOCKER_REGISTRY = "docker.io/teja694"
         // Docker credentials (stored in Jenkins credentials)
         DOCKER_CREDENTIALS = credentials('dockerhub-creds') // Using the correct Jenkins credential ID
     }
@@ -28,7 +26,7 @@ pipeline {
                 script {
                     // Log into the Docker registry using stored credentials
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        sh "echo '${DOCKER_PASSWORD}' | docker login -u '${DOCKER_USERNAME}' --password-stdin ${DOCKER_REGISTRY}"
+                        sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
                     }
                 }
             }
@@ -37,9 +35,9 @@ pipeline {
         stage('Package & Dockerize') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKER_IMAGE} ."
-                    sh "docker tag ${DOCKER_IMAGE} ${DOCKER_REGISTRY}/${DOCKER_IMAGE}"
-                    sh "docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}"
+                    sh "docker build -t financeapp ."
+                    sh "docker tag financeapp teja694/financeapp:latest"
+                    sh "docker push teja694/financeapp:latest"
                 }
             }
         }
