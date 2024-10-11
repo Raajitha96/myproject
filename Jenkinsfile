@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "financeapp:latest"
-        DOCKER_REGISTRY = "docker.io/raaji96"
+        DOCKER_REGISTRY = "docker.io/teja694"
         // Docker credentials (stored in Jenkins credentials)
         DOCKER_CREDENTIALS = credentials('dockerhub-creds') // Using the correct Jenkins credential ID
     }
