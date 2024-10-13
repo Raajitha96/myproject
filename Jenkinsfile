@@ -84,7 +84,7 @@ pipeline {
         
         stage('Deploy to Test Server') {
             steps {
-                sh 'ansible-playbook -i ansible/inventory/test ansible/playbooks/deploy.yml --extra-vars "host=${TEST_SERVER_IP}"'
+                sh "ansible-playbook -i ansible/inventory/test ansible/playbooks/deploy.yml --extra-vars 'host=${TEST_SERVER_IP}'"
             }
         }
 
@@ -148,7 +148,7 @@ pipeline {
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sh 'ansible-playbook -i ansible/inventory/prod ansible/playbooks/deploy.yml --extra-vars "host=${PROD_SERVER_IP}"'
+                sh "ansible-playbook -i ansible/inventory/prod ansible/playbooks/deploy.yml --extra-vars 'host=${PROD_SERVER_IP}'"
             }
         }
     }
