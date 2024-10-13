@@ -1,5 +1,5 @@
 provider "aws" {
-  region     = "us-east-1
+  region     = "us-east-1"  # Fixed the missing quote here
   access_key = "AKIA4MTWLOQZKBQL4LDA"
   secret_key = "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"
 }
@@ -51,7 +51,3 @@ resource "aws_instance" "prod_server" {
 output "prod_server_ip" {
   value = aws_instance.prod_server.public_ip
 }
-
-
-
-
