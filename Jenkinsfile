@@ -15,7 +15,7 @@ pipeline {
         }
         
         stage('Build & Unit Test') {
-            steps {
+            steps { 
                 sh 'mvn clean install'
                 sh 'mvn test'
             }
@@ -41,12 +41,21 @@ pipeline {
                 }
             }
         }
-        
+
+        // Provision Test Server using Terraform
         stage('Provision Test Server (Terraform)') {
             steps {
-                dir('terraform/test') {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                script {
+                    // Retrieve AWS credentials
+                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh """
+                            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                            cd terraform/test
+                            terraform init
+                            terraform apply -auto-approve
+                        """
+                    }
                 }
             }
         }
@@ -75,7 +84,7 @@ pipeline {
         
         stage('Deploy to Test Server') {
             steps {
-                sh 'ansible-playbook -i ansible/inventory/test ansible/playbooks/deploy.yml --extra-vars "host=${TEST_SERVER_IP}"'
+                sh "ansible-playbook -i ansible/inventory/test ansible/playbooks/deploy.yml --extra-vars 'host=${TEST_SERVER_IP}'"
             }
         }
 
@@ -85,14 +94,23 @@ pipeline {
             }
         }
 
+        // Provision Production Server using Terraform
         stage('Provision Prod Server (Terraform)') {
             when {
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
-                dir('terraform/prod') {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                script {
+                    // Retrieve AWS credentials
+                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh """
+                            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                            cd terraform/prod
+                            terraform init
+                            terraform apply -auto-approve
+                        """
+                    }
                 }
             }
         }
@@ -130,7 +148,7 @@ pipeline {
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sh 'ansible-playbook -i ansible/inventory/prod ansible/playbooks/deploy.yml --extra-vars "host=${PROD_SERVER_IP}"'
+                sh "ansible-playbook -i ansible/inventory/prod ansible/playbooks/deploy.yml --extra-vars 'host=${PROD_SERVER_IP}'"
             }
         }
     }

@@ -23,7 +23,7 @@ resource "aws_security_group" "test_sg" {
   ingress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
+    protocol    = "-1"            # Allow all traffic (not recommended for production)
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -38,7 +38,7 @@ resource "aws_security_group" "test_sg" {
 resource "aws_instance" "test_server" {
   ami                    = "ami-0866a3c8686eaeeba"  # Ensure this AMI is valid for your region
   instance_type          = "t3.medium"
-  key_name               = "raaji"                   # Replace with your key pair name
+  key_name               = "raaji"                  # Replace with your key pair name
   vpc_security_group_ids = [aws_security_group.test_sg.id]
 
   tags = {
@@ -49,7 +49,3 @@ resource "aws_instance" "test_server" {
 output "test_server_ip" {
   value = aws_instance.test_server.public_ip
 }
-
-
-
-
