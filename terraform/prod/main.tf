@@ -1,7 +1,5 @@
 provider "aws" {
-  region     = "us-east-1"  # Fixed the missing quote here
-  access_key = "AKIA4MTWLOQZKBQL4LDA"
-  secret_key = "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"
+  region = "us-east-1"
 }
 
 resource "aws_security_group" "prod_sg" {
