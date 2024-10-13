@@ -2,20 +2,21 @@ pipeline {
     agent any
 
     environment {
-        // Docker credentials (stored in Jenkins credentials)
-        DOCKER_CREDENTIALS = credentials('dockerhub-creds') // Using the correct Jenkins credential ID
+        DOCKER_CREDENTIALS = credentials('dockerhub-creds')
+        TEST_SERVER_IP = ""
+        PROD_SERVER_IP = ""
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 git 'https://github.com/Raajitha96/myproject.git'
-                sh 'chmod +x run-tests.sh'  // Make the script executable
+                sh 'chmod +x run-tests.sh'
             }
         }
 
         stage('Build & Unit Test') {
-            steps {
+            steps { 
                 sh 'mvn clean install'
                 sh 'mvn test'
             }
@@ -24,7 +25,6 @@ pipeline {
         stage('Docker Login') {
             steps {
                 script {
-                    // Log into the Docker registry using stored credentials
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
                     }
@@ -46,7 +46,6 @@ pipeline {
         stage('Provision Test Server (Terraform)') {
             steps {
                 script {
-                    // Retrieve AWS credentials
                     withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh """
                             export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -64,11 +63,11 @@ pipeline {
             steps {
                 script {
                     // Extract test server IP from Terraform output with color disabled
-                    def TEST_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
-                    echo "Test Server IP: ${TEST_SERVER_IP}"
+                    env.TEST_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
+                    echo "Test Server IP: ${env.TEST_SERVER_IP}"
 
                     // Dynamically generate the inventory file for the test environment
-                    writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${TEST_SERVER_IP}\n"
+                    writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${env.TEST_SERVER_IP}\n"
                 }
             }
         }
@@ -84,7 +83,7 @@ pipeline {
 
         stage('Deploy to Test Server') {
             steps {
-                sh "ansible-playbook -i ansible/inventory/test.ini ansible/playbooks/deploy.yml --extra-vars 'host=${TEST_SERVER_IP}'"
+                sh "ansible-playbook -i ansible/inventory/test.ini ansible/playbooks/deploy.yml --extra-vars 'host=${env.TEST_SERVER_IP}'"
             }
         }
 
@@ -101,7 +100,6 @@ pipeline {
             }
             steps {
                 script {
-                    // Retrieve AWS credentials
                     withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                         sh """
                             export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -122,11 +120,11 @@ pipeline {
             steps {
                 script {
                     // Extract prod server IP from Terraform output with color disabled
-                    def PROD_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
-                    echo "Prod Server IP: ${PROD_SERVER_IP}"
+                    env.PROD_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
+                    echo "Prod Server IP: ${env.PROD_SERVER_IP}"
 
                     // Dynamically generate the inventory file for the prod environment
-                    writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${PROD_SERVER_IP}\n"
+                    writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${env.PROD_SERVER_IP}\n"
                 }
             }
         }
@@ -148,7 +146,7 @@ pipeline {
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sh "ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy.yml --extra-vars 'host=${PROD_SERVER_IP}'"
+                sh "ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy.yml --extra-vars 'host=${env.PROD_SERVER_IP}'"
             }
         }
     }
