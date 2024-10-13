@@ -13,14 +13,14 @@ pipeline {
                 sh 'chmod +x run-tests.sh'  // Make the script executable
             }
         }
-        
+
         stage('Build & Unit Test') {
-            steps { 
+            steps {
                 sh 'mvn clean install'
                 sh 'mvn test'
             }
         }
-        
+
         stage('Docker Login') {
             steps {
                 script {
@@ -63,12 +63,12 @@ pipeline {
         stage('Retrieve Test Server IP') {
             steps {
                 script {
-                    // Extract test server IP from Terraform output
-                    TEST_SERVER_IP = sh(returnStdout: true, script: "terraform output -raw test_server_ip").trim()
+                    // Extract test server IP from Terraform output with color disabled
+                    def TEST_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
                     echo "Test Server IP: ${TEST_SERVER_IP}"
-                    
+
                     // Dynamically generate the inventory file for the test environment
-                    writeFile file: 'ansible/inventory/test', text: "[test]\ntest-server ansible_host=${TEST_SERVER_IP}\n"
+                    writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${TEST_SERVER_IP}\n"
                 }
             }
         }
@@ -77,14 +77,14 @@ pipeline {
             steps {
                 ansiblePlaybook(
                     playbook: 'ansible/playbooks/test-server.yml',
-                    inventory: 'ansible/inventory/test'
+                    inventory: 'ansible/inventory/test.ini'
                 )
             }
         }
-        
+
         stage('Deploy to Test Server') {
             steps {
-                sh "ansible-playbook -i ansible/inventory/test ansible/playbooks/deploy.yml --extra-vars 'host=${TEST_SERVER_IP}'"
+                sh "ansible-playbook -i ansible/inventory/test.ini ansible/playbooks/deploy.yml --extra-vars 'host=${TEST_SERVER_IP}'"
             }
         }
 
@@ -121,12 +121,12 @@ pipeline {
             }
             steps {
                 script {
-                    // Extract prod server IP from Terraform output
-                    PROD_SERVER_IP = sh(returnStdout: true, script: "terraform output -raw prod_server_ip").trim()
+                    // Extract prod server IP from Terraform output with color disabled
+                    def PROD_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
                     echo "Prod Server IP: ${PROD_SERVER_IP}"
-                    
+
                     // Dynamically generate the inventory file for the prod environment
-                    writeFile file: 'ansible/inventory/prod', text: "[prod]\nprod-server ansible_host=${PROD_SERVER_IP}\n"
+                    writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${PROD_SERVER_IP}\n"
                 }
             }
         }
@@ -138,17 +138,17 @@ pipeline {
             steps {
                 ansiblePlaybook(
                     playbook: 'ansible/playbooks/prod-server.yml',
-                    inventory: 'ansible/inventory/prod'
+                    inventory: 'ansible/inventory/prod.ini'
                 )
             }
         }
-        
+
         stage('Deploy to Prod Server') {
             when {
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
-                sh "ansible-playbook -i ansible/inventory/prod ansible/playbooks/deploy.yml --extra-vars 'host=${PROD_SERVER_IP}'"
+                sh "ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy.yml --extra-vars 'host=${PROD_SERVER_IP}'"
             }
         }
     }
