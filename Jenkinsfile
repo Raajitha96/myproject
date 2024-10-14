@@ -81,7 +81,7 @@ pipeline {
                         
 
                         // Dynamically generate the inventory file for the test environment
-                        writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${tfOutput}\n"
+                        writeFile file: ('ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${tfOutput}\n")
                     }
                 }
             }
