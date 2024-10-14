@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         DOCKER_CREDENTIALS = credentials('dockerhub-creds')
+        TEST_SERVER_IP = ""
+        PROD_SERVER_IP = ""
     }
 
     stages {
