@@ -68,14 +68,14 @@ pipeline {
                         sh "ls -l terraform.tfstate"
 
                         // Extract test server IP from Terraform output with color disabled
-                        def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
+                        tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
+                        env.TEST_SERVER_IP = tfOutput
                         
                         // Validate output
                         if (!tfOutput || tfOutput == 'null') {
                             error "Failed to retrieve the test server IP. The output was null or empty. Please check your Terraform configuration."
                         }
 
-                        env.TEST_SERVER_IP = tfOutput
                         echo "Test Server IP: ${env.TEST_SERVER_IP}"
 
                         // Dynamically generate the inventory file for the test environment
@@ -138,14 +138,14 @@ pipeline {
                         sh "ls -l terraform.tfstate"
 
                         // Extract prod server IP from Terraform output with color disabled
-                        def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
+                        tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
+                        env.PROD_SERVER_IP = tfOutput
                         
                         // Validate output
                         if (!tfOutput || tfOutput == 'null') {
                             error "Failed to retrieve the prod server IP. The output was null or empty. Please check your Terraform configuration."
                         }
 
-                        env.PROD_SERVER_IP = tfOutput
                         echo "Prod Server IP: ${env.PROD_SERVER_IP}"
 
                         // Dynamically generate the inventory file for the prod environment
