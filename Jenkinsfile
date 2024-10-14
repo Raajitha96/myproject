@@ -78,7 +78,7 @@ pipeline {
 
                         echo "Test Server IP: ${tfOutput}"
                         
-                        
+                        mkdir -p ansible/inventory
 
                         // Dynamically generate the inventory file for the test environment
                         writeFile (file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${tfOutput}\n")
