@@ -64,9 +64,13 @@ pipeline {
                 script {
                     // Ensure we're in the correct directory
                     dir('terraform/test') {
+                        // Check if state file exists
+                        sh "ls -l terraform.tfstate"
+
                         // Extract test server IP from Terraform output with color disabled
                         def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
                         
+                        // Validate output
                         if (!tfOutput || tfOutput == 'null') {
                             error "Failed to retrieve the test server IP. The output was null or empty. Please check your Terraform configuration."
                         }
@@ -130,9 +134,13 @@ pipeline {
                 script {
                     // Ensure we're in the correct directory
                     dir('terraform/prod') {
+                        // Check if state file exists
+                        sh "ls -l terraform.tfstate"
+
                         // Extract prod server IP from Terraform output with color disabled
                         def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
                         
+                        // Validate output
                         if (!tfOutput || tfOutput == 'null') {
                             error "Failed to retrieve the prod server IP. The output was null or empty. Please check your Terraform configuration."
                         }
