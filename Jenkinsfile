@@ -68,7 +68,7 @@ pipeline {
                         sh "ls -l terraform.tfstate"
 
                         // Extract test server IP from Terraform output with color disabled
-                        tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
+                        def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
                         TEST_SERVER_IP = ${tfOutput}
                         
                         // Validate output
@@ -77,6 +77,8 @@ pipeline {
                         }
 
                         echo "Test Server IP: ${TEST_SERVER_IP}"
+                        echo "Test Server IP: ${env.TEST_SERVER_IP}"
+                        
 
                         // Dynamically generate the inventory file for the test environment
                         writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${env.TEST_SERVER_IP}\n"
