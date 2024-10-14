@@ -69,19 +69,19 @@ pipeline {
 
                         // Extract test server IP from Terraform output with color disabled
                         def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
-                        TEST_SERVER_IP = ${tfOutput}
+                        
                         
                         // Validate output
                         if (!tfOutput || tfOutput == 'null') {
                             error "Failed to retrieve the test server IP. The output was null or empty. Please check your Terraform configuration."
                         }
 
-                        echo "Test Server IP: ${TEST_SERVER_IP}"
-                        echo "Test Server IP: ${env.TEST_SERVER_IP}"
+                        echo "Test Server IP: ${tfOutput}"
+                        
                         
 
                         // Dynamically generate the inventory file for the test environment
-                        writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${env.TEST_SERVER_IP}\n"
+                        writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${tfOutput}\n"
                     }
                 }
             }
