@@ -62,12 +62,21 @@ pipeline {
         stage('Retrieve Test Server IP') {
             steps {
                 script {
-                    // Extract test server IP from Terraform output with color disabled
-                    env.TEST_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
-                    echo "Test Server IP: ${env.TEST_SERVER_IP}"
+                    // Ensure we're in the correct directory
+                    dir('terraform/test') {
+                        // Extract test server IP from Terraform output with color disabled
+                        def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
+                        
+                        if (!tfOutput || tfOutput == 'null') {
+                            error "Failed to retrieve the test server IP. The output was null or empty. Please check your Terraform configuration."
+                        }
 
-                    // Dynamically generate the inventory file for the test environment
-                    writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${env.TEST_SERVER_IP}\n"
+                        env.TEST_SERVER_IP = tfOutput
+                        echo "Test Server IP: ${env.TEST_SERVER_IP}"
+
+                        // Dynamically generate the inventory file for the test environment
+                        writeFile file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${env.TEST_SERVER_IP}\n"
+                    }
                 }
             }
         }
@@ -119,12 +128,21 @@ pipeline {
             }
             steps {
                 script {
-                    // Extract prod server IP from Terraform output with color disabled
-                    env.PROD_SERVER_IP = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
-                    echo "Prod Server IP: ${env.PROD_SERVER_IP}"
+                    // Ensure we're in the correct directory
+                    dir('terraform/prod') {
+                        // Extract prod server IP from Terraform output with color disabled
+                        def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
+                        
+                        if (!tfOutput || tfOutput == 'null') {
+                            error "Failed to retrieve the prod server IP. The output was null or empty. Please check your Terraform configuration."
+                        }
 
-                    // Dynamically generate the inventory file for the prod environment
-                    writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${env.PROD_SERVER_IP}\n"
+                        env.PROD_SERVER_IP = tfOutput
+                        echo "Prod Server IP: ${env.PROD_SERVER_IP}"
+
+                        // Dynamically generate the inventory file for the prod environment
+                        writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${env.PROD_SERVER_IP}\n"
+                    }
                 }
             }
         }
