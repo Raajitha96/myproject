@@ -36,10 +36,11 @@ resource "aws_security_group" "test_sg" {
 }
 
 resource "aws_instance" "test_server" {
-  ami                    = "ami-0866a3c8686eaeeba"  # Ensure this AMI is valid for your region
-  instance_type          = "t3.medium"
-  key_name               = "raaji"                  # Replace with your key pair name
-  vpc_security_group_ids = [aws_security_group.test_sg.id]
+  ami                         = "ami-0866a3c8686eaeeba"  # Ensure this AMI is valid for your region
+  instance_type               = "t3.medium"
+  key_name                    = "raaji"                  # Replace with your key pair name
+  vpc_security_group_ids      = [aws_security_group.test_sg.id]
+  associate_public_ip_address = true
 
   tags = {
     Name = "Test Server"
