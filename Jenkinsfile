@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -82,7 +83,9 @@ pipeline {
 
         stage('Configure Test Server (Ansible)') {
             steps {
-                sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory/test.ini -u ubuntu --private-key /var/lib/jenkins/raaji.pem ansible/playbooks/test-server.yml"
+                withEnv(['ANSIBLE_HOST_KEY_CHECKING=False']) {
+                    sh "ansible-playbook -i ansible/inventory/test.ini -u ubuntu --private-key /var/lib/jenkins/raaji.pem ansible/playbooks/test-server.yml"
+                }
             }
         }
 
