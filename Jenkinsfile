@@ -3,8 +3,6 @@ pipeline {
 
     environment {
         DOCKER_CREDENTIALS = credentials('dockerhub-creds')
-        TEST_SERVER_IP = ""
-        PROD_SERVER_IP = ""
     }
 
     stages {
@@ -68,20 +66,15 @@ pipeline {
                         sh "ls -l terraform.tfstate"
 
                         // Extract test server IP from Terraform output with color disabled
-                        def tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
-                        
-                        
-                        // Validate output
-                        if (!tfOutput || tfOutput == 'null') {
-                            error "Failed to retrieve the test server IP. The output was null or empty. Please check your Terraform configuration."
-                        }
+                        def tfOutputTest = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
 
-                        echo "Test Server IP: ${tfOutput}"
+                        echo "Test Server IP: ${tfOutputTest}"
                         
-                        sh "mkdir -p ansible/inventory"
+                        sh "mkdir -p ../../ansible/inventory"
 
                         // Dynamically generate the inventory file for the test environment
-                        writeFile (file: 'ansible/inventory/test.ini', text: "[test]\ntest-server ansible_host=${tfOutput}\n")
+                        def data = "[test_server]\ntest-server ansible_host=${tfOutputTest}\n"
+                        writeFile(file: '../../ansible/inventory/test.ini', text: data)
                     }
                 }
             }
