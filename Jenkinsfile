@@ -70,7 +70,7 @@ pipeline {
 
         stage('Automated Testing') {
             steps {
-                sh './run-tests.sh'
+                sh "./run-tests.sh ${tfOutputTest}"
             }
         }
 
