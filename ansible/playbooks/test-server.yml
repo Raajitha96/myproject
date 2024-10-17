@@ -1,13 +1,28 @@
 ---
-- hosts: test_server
-  become: yes
-  tasks:
+- name: Configure Docker on EC2 Instances
+  hosts: "{{ tfOutputTest }}"
+  become: true
+  tasks: 
+    - name: Update apt package index
+      apt:
+        update_cache: yes
+
     - name: Install Docker
       apt:
         name: docker.io
         state: present
 
-    - name: Install Java
-      apt:
-        name: openjdk-17-jdk
-        state: present
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Deploy Docker container
+      docker_container:
+        name: finance_app
+        image: teja694/financeapp:latest
+        state: started
+        restart_policy: always
+        published_ports:
+          - "8084:8081"
