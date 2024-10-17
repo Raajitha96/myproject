@@ -90,7 +90,7 @@ pipeline {
                     // Poll until SSH is available
                     def status = ""
                     while (true) {
-                        status = sh(returnStdout: true, script: "nc -z -v -w "${5}" ${testServerIP} 22; echo $?").trim()
+                        status = sh(returnStdout: true, script: "nc -z -v -w 5 ${testServerIP} 22; echo $?").trim()
                         if (status == "0") {
                             echo "SSH is now available!"
                             break
