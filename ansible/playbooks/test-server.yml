@@ -1,6 +1,6 @@
 ---
 - name: Configure Docker on EC2 Instances
-  hosts: test_server
+  hosts: all
   become: true
   tasks: 
     - name: Update apt package index
