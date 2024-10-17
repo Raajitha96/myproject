@@ -11,7 +11,7 @@
       docker_container:
         name: "financeapp"
         image: "teja694/financeapp"
-        state: present
+        state: started
         pull: false
         restart_policy: always
         ports:
