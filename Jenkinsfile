@@ -53,7 +53,7 @@ pipeline {
                         playbook: 'ansible/playbooks/deploy.yml',
                         inventory: 'ansible/inventory/test.ini',
                         extraVars: [
-                          host: '${tfOutputTest}',
+                          host: "${tfOutputTest}",
                         ],
                         credentialsId: 'ansible_ssh_private_key_file',
                         hostKeyChecking: false,
