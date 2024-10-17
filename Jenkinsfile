@@ -80,28 +80,6 @@ pipeline {
             }
         }
 
-        stage('Wait for Test Server to be Ready') {
-            steps {
-                script {
-                    // Wait until the server is reachable via SSH
-                    def testServerIP = sh(returnStdout: true, script: "awk -F ' = ' '/ansible_host/ {print \$2}' ../../ansible/inventory/test.ini").trim()
-                    echo "Waiting for SSH to be available on ${testServerIP}..."
-
-                    // Poll until SSH is available
-                    def status = ""
-                    while (true) {
-                        status = sh(returnStdout: true, script: "nc -z -v -w 5 ${testServerIP} 22; echo $?").trim()
-                        if (status == "0") {
-                            echo "SSH is now available!"
-                            break
-                        }
-                        echo "Still waiting for SSH..."
-                        sleep(10)  // Wait for 10 seconds before checking again
-                    }
-                }
-            }
-        }
-
         stage('Configure Test Server (Ansible)') {
             steps {
                 script {
