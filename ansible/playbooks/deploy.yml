@@ -15,7 +15,7 @@
         pull: false
         restart_policy: always
         ports:
-          - "8080:8080"
+          - "8080:8081"
 
     - name: Log out of DockerHub
       docker_login:

@@ -83,9 +83,9 @@
 
     - name: Deploy Docker container
       docker_container:
-        name: finance_app
-        image: teja694/financeapp:latest
+        name: "financeapp"
+        image: "teja694/financeapp"
         state: started
         restart_policy: always
         published_ports:
-          - "8084:8081"
+          - "8080:8081"
