@@ -4,8 +4,8 @@
   tasks:
     - name: Docker Login using shell
       docker_login:
-        username: {{ username }}
-        password:  {{ password }}
+        username: '{{ username }}'
+        password:  '{{ password }}'
 
     - name: Run container
       docker_container:
