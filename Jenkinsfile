@@ -53,8 +53,10 @@ pipeline {
         stage('Deploy to Test Server') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    def server_ip = readFile(file: 'test-server')
-                    echo "Server IP: ${server_ip}"
+                    script {
+                      def server_ip = readFile('test-server').trim()
+                      echo "Server IP: ${server_ip}"
+                    }
                     ansiblePlaybook(
                         playbook: 'ansible/playbooks/deploy.yml',
                         inventory: 'ansible/inventory/test.ini',
