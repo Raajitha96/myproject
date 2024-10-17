@@ -10,9 +10,9 @@
     - name: Run container
       docker_container:
         name: "financeapp"
-        image: "financeapp"
+        image: "teja694/financeapp"
         state: present
-        pull: true
+        pull: false
         restart_policy: always
         ports:
           - "8080:8080"
