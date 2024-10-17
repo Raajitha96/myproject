@@ -49,16 +49,22 @@ pipeline {
 
         stage('Deploy to Test Server') {
             steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     ansiblePlaybook(
                         playbook: 'ansible/playbooks/deploy.yml',
                         inventory: 'ansible/inventory/test.ini',
                         // extraVars: [
                         //   host: "${tfOutputTest}",
                         // ],
+                        extraVars: [
+                          username: "${DOCKER_USERNAME}",
+                          password: "${DOCKER_PASSWORD}",
+                        ],
                         credentialsId: 'ansible_ssh_private_key_file',
                         hostKeyChecking: false,
                         disableHostKeyChecking: true
                     )
+                }
             }
         }
 
