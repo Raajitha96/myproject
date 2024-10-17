@@ -76,7 +76,7 @@ pipeline {
         stage('Automated Testing') {
             steps {
                 script {
-                    def server_ip = readFile(file: 'test-server')
+                    def server_ip = readFile('test-server').trim()
                     echo "Server IP: ${server_ip}"
                     sh "./run-tests.sh ${server_ip}"
                 }
