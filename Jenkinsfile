@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -83,8 +82,17 @@ pipeline {
 
         stage('Configure Test Server (Ansible)') {
             steps {
-                withEnv(['ANSIBLE_HOST_KEY_CHECKING=False']) {
-                    sh "ansible-playbook -i ansible/inventory/test.ini -u ubuntu --private-key /var/lib/jenkins/raaji.pem ansible/playbooks/test-server.yml"
+                script {
+                    // Ensure SSH host key checking is disabled
+                    withEnv(['ANSIBLE_HOST_KEY_CHECKING=False']) {
+                        // Run Ansible playbook using the dynamically generated inventory
+                        sh """
+                            ansible-playbook -i ansible/inventory/test.ini \
+                            -u ubuntu \
+                            --private-key /var/lib/jenkins/raaji.pem \
+                            ansible/playbooks/test-server.yml -vvvv
+                        """
+                    }
                 }
             }
         }
