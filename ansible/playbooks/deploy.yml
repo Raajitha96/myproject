@@ -2,8 +2,21 @@
 - hosts: all
   become: yes
   tasks:
-    - name: Pull Docker image
-      command: "docker pull teja694/financeapp:latest"
+    - name: Docker Login using shell
+      docker_login:
+        username: {{ username }}
+        password:  {{ password }}
 
-    - name: Run Docker container
-      command: "docker run -d -p 8080:8080 financeapp:latest"
+    - name: Run container
+      docker_container:
+        name: "financeapp"
+        image: "financeapp"
+        state: present
+        pull: true
+        restart_policy: always
+        ports:
+          - "8080:8080"
+
+    - name: Log out of DockerHub
+      docker_login:
+        state: absent
