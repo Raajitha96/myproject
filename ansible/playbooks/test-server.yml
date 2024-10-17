@@ -1,6 +1,6 @@
 ---
 - name: Configure Docker on EC2 Instances
-  hosts: "{{ tfOutputTest }}"
+  hosts: test_server
   become: true
   tasks: 
     - name: Update apt package index
