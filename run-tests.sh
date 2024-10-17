@@ -9,7 +9,7 @@ if [ -z "$TEST_SERVER_IP" ]; then
 fi
 
 # Health check URL
-HEALTH_CHECK_URL="http://$TEST_SERVER_IP:8080/healthcheck"
+HEALTH_CHECK_URL="http://$TEST_SERVER_IP:8080/sayHello"
 
 # Perform health check
 echo "Performing health check on $HEALTH_CHECK_URL"
