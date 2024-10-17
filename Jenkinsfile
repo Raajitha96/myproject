@@ -30,6 +30,9 @@ pipeline {
 
                         def data = "[test_server]\ntest-server ansible_host=${tfOutputTest}\n"
                         writeFile(file: '../../ansible/inventory/test.ini', text: data)
+
+                        def server = "${tfOutputTest}"
+                        writeFile(file: '../../test-server', text: server)
                     }
                 }
             }
@@ -50,11 +53,13 @@ pipeline {
         stage('Deploy to Test Server') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    def server_ip = readFile(file: 'test-server')
+                    echo "Server IP: ${server_ip}"
                     ansiblePlaybook(
                         playbook: 'ansible/playbooks/deploy.yml',
                         inventory: 'ansible/inventory/test.ini',
                         // extraVars: [
-                        //   host: "${tfOutputTest}",
+                        //   host: "${server_ip}",
                         // ],
                         extraVars: [
                           username: "${DOCKER_USERNAME}",
@@ -71,7 +76,9 @@ pipeline {
         stage('Automated Testing') {
             steps {
                 script {
-                  sh "./run-tests.sh ${tfOutputTest}"
+                    def server_ip = readFile(file: 'test-server')
+                    echo "Server IP: ${server_ip}"
+                    sh "./run-tests.sh ${server_ip}"
                 }
             }
         }
