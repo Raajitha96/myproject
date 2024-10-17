@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TEST_SERVER_IP=$1
+
 # Check if TEST_SERVER_IP is set
 if [ -z "$TEST_SERVER_IP" ]; then
     echo "TEST_SERVER_IP is not set. Exiting."

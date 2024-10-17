@@ -82,102 +82,106 @@ pipeline {
 
         stage('Configure Test Server (Ansible)') {
             steps {
-                script {
-                    // Ensure SSH host key checking is disabled
-                    withEnv(['ANSIBLE_HOST_KEY_CHECKING=False']) {
-                        // Run Ansible playbook using the dynamically generated inventory
-                        sh """
-                            ansible-playbook -i ansible/inventory/test.ini \
-                            -u ubuntu \
-                            --private-key /var/lib/jenkins/raaji.pem \
-                            ansible/playbooks/test-server.yml -vvvv
-                        """
-                    }
-                }
+                ansiblePlaybook(
+                    playbook: 'ansible/playbooks/test-server.yml',
+                    inventory: 'ansible/inventory/test.ini',
+                    credentialsId: 'ansible_ssh_private_key_file',
+                    hostKeyChecking: false,
+                    disableHostKeyChecking: true
+                )
             }
         }
 
         stage('Deploy to Test Server') {
             steps {
-                sh "ansible-playbook -i ansible/inventory/test.ini ansible/playbooks/deploy.yml --extra-vars 'host=${env.TEST_SERVER_IP}'"
+                ansiblePlaybook(
+                    playbook: 'ansible/playbooks/deploy.yml',
+                    inventory: 'ansible/inventory/test.ini',
+                    extraVars: [
+                      host: '${tfOutputTest}',
+                    ],
+                    credentialsId: 'ansible_ssh_private_key_file',
+                    hostKeyChecking: false,
+                    disableHostKeyChecking: true
+                )
             }
         }
 
         stage('Automated Testing') {
             steps {
-                sh './run-tests.sh'
+                sh './run-tests.sh ${tfOutputTest}'
             }
         }
 
         // Provision Production Server using Terraform
-        stage('Provision Prod Server (Terraform)') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        sh """
-                            export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                            export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                            cd terraform/prod
-                            terraform init
-                            terraform apply -auto-approve
-                        """
-                    }
-                }
-            }
-        }
+        // stage('Provision Prod Server (Terraform)') {
+        //     when {
+        //         expression { currentBuild.result == 'SUCCESS' }
+        //     }
+        //     steps {
+        //         script {
+        //             withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+        //                 sh """
+        //                     export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        //                     export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+        //                     cd terraform/prod
+        //                     terraform init
+        //                     terraform apply -auto-approve
+        //                 """
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('Retrieve Prod Server IP') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    // Ensure we're in the correct directory
-                    dir('terraform/prod') {
-                        // Check if state file exists
-                        sh "ls -l terraform.tfstate"
+        // stage('Retrieve Prod Server IP') {
+        //     when {
+        //         expression { currentBuild.result == 'SUCCESS' }
+        //     }
+        //     steps {
+        //         script {
+        //             // Ensure we're in the correct directory
+        //             dir('terraform/prod') {
+        //                 // Check if state file exists
+        //                 sh "ls -l terraform.tfstate"
 
-                        // Extract prod server IP from Terraform output with color disabled
-                        tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
-                        env.PROD_SERVER_IP = tfOutput
+        //                 // Extract prod server IP from Terraform output with color disabled
+        //                 tfOutput = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
+        //                 env.PROD_SERVER_IP = tfOutput
                         
-                        // Validate output
-                        if (!tfOutput || tfOutput == 'null') {
-                            error "Failed to retrieve the prod server IP. The output was null or empty. Please check your Terraform configuration."
-                        }
+        //                 // Validate output
+        //                 if (!tfOutput || tfOutput == 'null') {
+        //                     error "Failed to retrieve the prod server IP. The output was null or empty. Please check your Terraform configuration."
+        //                 }
 
-                        echo "Prod Server IP: ${env.PROD_SERVER_IP}"
+        //                 echo "Prod Server IP: ${env.PROD_SERVER_IP}"
 
-                        // Dynamically generate the inventory file for the prod environment
-                        writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${env.PROD_SERVER_IP}\n"
-                    }
-                }
-            }
-        }
+        //                 // Dynamically generate the inventory file for the prod environment
+        //                 writeFile file: 'ansible/inventory/prod.ini', text: "[prod]\nprod-server ansible_host=${env.PROD_SERVER_IP}\n"
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('Configure Prod Server (Ansible)') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                ansiblePlaybook(
-                    playbook: 'ansible/playbooks/prod-server.yml',
-                    inventory: 'ansible/inventory/prod.ini'
-                )
-            }
-        }
+        // stage('Configure Prod Server (Ansible)') {
+        //     when {
+        //         expression { currentBuild.result == 'SUCCESS' }
+        //     }
+        //     steps {
+        //         ansiblePlaybook(
+        //             playbook: 'ansible/playbooks/prod-server.yml',
+        //             inventory: 'ansible/inventory/prod.ini'
+        //         )
+        //     }
+        // }
 
-        stage('Deploy to Prod Server') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                sh "ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy.yml --extra-vars 'host=${env.PROD_SERVER_IP}'"
-            }
-        }
+        // stage('Deploy to Prod Server') {
+        //     when {
+        //         expression { currentBuild.result == 'SUCCESS' }
+        //     }
+        //     steps {
+        //         sh "ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy.yml --extra-vars 'host=${env.PROD_SERVER_IP}'"
+        //     }
+        // }
     }
 
     post {
