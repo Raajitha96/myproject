@@ -40,7 +40,6 @@ pipeline {
             }
         }
 
-        // Provision Test Server using Terraform
         stage('Provision Test Server (Terraform)') {
             steps {
                 script {
@@ -60,34 +59,30 @@ pipeline {
         stage('Retrieve Test Server IP') {
             steps {
                 script {
-                    // Ensure we're in the correct directory
                     dir('terraform/test') {
-                        // Extract test server IP from Terraform output
                         def tfOutputTest = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
-
                         echo "Test Server IP: ${tfOutputTest}"
-
+                        
                         sh "mkdir -p ../../ansible/inventory"
-
+                        
                         def data = "[test_server]\ntest-server ansible_host=${tfOutputTest}\n"
                         writeFile(file: '../../ansible/inventory/test.ini', text: data)
 
                         def server = "${tfOutputTest}"
-                        writeFile(file: '../../test-server', text: server)
+                        writeFile(file: '../../test-server', text: tfOutputTest)
                     }
                 }
             }
         }
 
         stage('Configure Test Server (Ansible)') {
-              steps {
-                    ansiblePlaybook(
-                        playbook: 'ansible/playbooks/test-server.yml',
-                        inventory: 'ansible/inventory/test.ini',
-                        credentialsId: 'ansible_ssh_private_key_file',
-                        hostKeyChecking: false,
-                        disableHostKeyChecking: true
-                    )
+            steps {
+                ansiblePlaybook(
+                    playbook: 'ansible/playbooks/test-server.yml',
+                    inventory: 'ansible/inventory/test.ini',
+                    credentialsId: 'ansible_ssh_private_key_file',
+                    disableHostKeyChecking: true
+                )
             }
         }
 
@@ -95,18 +90,17 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     script {
-                      def server_ip = readFile('test-server').trim()
-                      echo "Server IP: ${server_ip}"
+                        def server_ip = readFile('test-server').trim()
+                        echo "Server IP: ${server_ip}"
                     }
                     ansiblePlaybook(
                         playbook: 'ansible/playbooks/deploy.yml',
                         inventory: 'ansible/inventory/test.ini',
                         extraVars: [
-                          username: "${DOCKER_USERNAME}",
-                          password: "${DOCKER_PASSWORD}",
+                            username: "${DOCKER_USERNAME}",
+                            password: "${DOCKER_PASSWORD}",
                         ],
                         credentialsId: 'ansible_ssh_private_key_file',
-                        hostKeyChecking: false,
                         disableHostKeyChecking: true
                     )
                 }
@@ -146,11 +140,8 @@ pipeline {
         stage('Retrieve Production Server IP') {
             steps {
                 script {
-                    // Ensure we're in the correct directory
                     dir('terraform/prod') {
-                        // Extract production server IP from Terraform output
                         def tfOutputProd = sh(returnStdout: true, script: "terraform output -no-color -raw prod_server_ip").trim()
-
                         echo "Production Server IP: ${tfOutputProd}"
 
                         sh "mkdir -p ../../ansible/inventory"
@@ -159,21 +150,20 @@ pipeline {
                         writeFile(file: '../../ansible/inventory/prod.ini', text: data)
 
                         def server = "${tfOutputProd}"
-                        writeFile(file: '../../prod-server', text: server)
+                        writeFile(file: '../../prod-server', text: tfOutputProd)
                     }
                 }
             }
         }
 
         stage('Configure Production Server (Ansible)') {
-              steps {
-                    ansiblePlaybook(
-                        playbook: 'ansible/playbooks/prod-server.yml',
-                        inventory: 'ansible/inventory/prod.ini',
-                        credentialsId: 'ansible_ssh_private_key_file',
-                        hostKeyChecking: false,
-                        disableHostKeyChecking: true
-                    )
+            steps {
+                ansiblePlaybook(
+                    playbook: 'ansible/playbooks/prod-server.yml',
+                    inventory: 'ansible/inventory/prod.ini',
+                    credentialsId: 'ansible_ssh_private_key_file',
+                    disableHostKeyChecking: true
+                )
             }
         }
 
@@ -181,18 +171,17 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     script {
-                      def server_ip = readFile('prod-server').trim()
-                      echo "Production Server IP: ${server_ip}"
+                        def server_ip = readFile('prod-server').trim()
+                        echo "Production Server IP: ${server_ip}"
                     }
                     ansiblePlaybook(
                         playbook: 'ansible/playbooks/deploy.yml',
                         inventory: 'ansible/inventory/prod.ini',
                         extraVars: [
-                          username: "${DOCKER_USERNAME}",
-                          password: "${DOCKER_PASSWORD}",
+                            username: "${DOCKER_USERNAME}",
+                            password: "${DOCKER_PASSWORD}",
                         ],
                         credentialsId: 'ansible_ssh_private_key_file',
-                        hostKeyChecking: false,
                         disableHostKeyChecking: true
                     )
                 }
