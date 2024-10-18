@@ -21,7 +21,7 @@ pipeline {
                         // Check if state file exists
 
                         // Extract test server IP from Terraform output with color disabled
-                        def tfOutputTest = sh(returnStdout: true, script: "echo 3.218.72.211").trim()
+                        def tfOutputTest = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
 
 
                         echo "Test Server IP: ${tfOutputTest}"
