@@ -60,16 +60,21 @@ pipeline {
             steps {
                 script {
                     dir('terraform/test') {
+                        // Check if state file exists
+
+                        // Extract test server IP from Terraform output with color disabled
                         def tfOutputTest = sh(returnStdout: true, script: "terraform output -no-color -raw test_server_ip").trim()
+
+
                         echo "Test Server IP: ${tfOutputTest}"
-                        
+
                         sh "mkdir -p ../../ansible/inventory"
-                        
+
                         def data = "[test_server]\ntest-server ansible_host=${tfOutputTest}\n"
                         writeFile(file: '../../ansible/inventory/test.ini', text: data)
 
                         def server = "${tfOutputTest}"
-                        writeFile(file: '../../test-server', text: tfOutputTest)
+                        writeFile(file: '../../test-server', text: server)
                     }
                 }
             }
