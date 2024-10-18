@@ -160,6 +160,10 @@ pipeline {
 
                         def server = "${tfOutputProd}"
                         writeFile(file: '../../prod-server', text: tfOutputProd)
+
+                        // Wait for 60 seconds to allow the instance to reach the "running" state
+                        echo "Waiting for the server to be ready..."
+                        sleep 60
                     }
                 }
             }
