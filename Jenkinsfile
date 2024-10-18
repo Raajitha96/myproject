@@ -129,7 +129,7 @@ pipeline {
         // Provision Production Server using Terraform
         stage('Provision Prod Server (Terraform)') {
             when {
-                expression { currentBuild.result == 'SUCCESS' }
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {
