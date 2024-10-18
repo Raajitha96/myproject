@@ -26,7 +26,7 @@ while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
 
     # Check if the response is HTTP 200 (success)
     if [ "$RESPONSE" -eq 200 ]; then
-        echo "Health check passed: $RESPONSE"
+        echo "SUCCESS"
         exit 0
     else
         echo "Health check failed: $RESPONSE. Retrying in $SLEEP_TIME seconds..."
