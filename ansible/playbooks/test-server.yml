@@ -84,7 +84,7 @@
     - name: Deploy Docker container
       docker_container:
         name: "financeapp"
-        image: "teja694/financeapp"
+        image: "raaji96/financeapp"
         state: started
         restart_policy: always
         published_ports:
