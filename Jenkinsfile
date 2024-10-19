@@ -34,8 +34,8 @@ pipeline {
             steps {
                 script {
                     sh "docker build -t financeapp ."
-                    sh "docker tag financeapp teja694/financeapp:latest"
-                    sh "docker push teja694/financeapp:latest"
+                    sh "docker tag financeapp raaji96/financeapp:latest"
+                    sh "docker push raaji96/financeapp:latest"
                 }
             }
         }
